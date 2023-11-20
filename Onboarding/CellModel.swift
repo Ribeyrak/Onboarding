@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+struct CellModel {
+    let image: String
+    let mainLabelText: String
+    let subLabelText: String
+}

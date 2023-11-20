@@ -25,8 +25,9 @@ class OnboardingViewCell: UICollectionViewCell {
         let v = UILabel()
         v.textAlignment = .center
         v.numberOfLines = 2
-        v.font = .systemFont(ofSize: 26)
+        v.font = .systemFont(ofSize: 26, weight: .semibold)
         v.textColor = UIColor(hexString: "#FFFFFF")
+        v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
     
@@ -34,7 +35,7 @@ class OnboardingViewCell: UICollectionViewCell {
         let v = UILabel()
         v.textAlignment = .center
         v.numberOfLines = 2
-        v.font = .systemFont(ofSize: 17)
+        v.font = .systemFont(ofSize: 16, weight: .regular)
         v.textColor = UIColor(hexString: "#E3E3E3")
         return v
     }()
@@ -52,7 +53,7 @@ class OnboardingViewCell: UICollectionViewCell {
     private func setupUI() {
         contentView.addSubview(image)
         image.snp.makeConstraints {
-            $0.top.equalToSuperview().inset(16)
+            $0.top.equalToSuperview().inset(32)
             $0.left.right.equalToSuperview().inset(24)
             $0.height.equalTo(320)
         }
@@ -61,14 +62,14 @@ class OnboardingViewCell: UICollectionViewCell {
         mainLabel.snp.makeConstraints {
             $0.top.equalTo(image.snp.bottom).offset(34)
             $0.leading.trailing.equalToSuperview().inset(24)
-            $0.height.equalTo(55)
+            $0.height.equalTo(70)
         }
         
         contentView.addSubview(subLabel)
         subLabel.snp.makeConstraints {
-            $0.top.equalTo(mainLabel.snp.bottom).offset(16)
+            $0.top.equalTo(mainLabel.snp.bottom).offset(4)
             $0.left.right.equalToSuperview().inset(24)
-            $0.height.equalTo(39)
+            $0.height.equalTo(50)
         }
     }
     

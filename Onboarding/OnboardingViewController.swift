@@ -12,6 +12,7 @@ final class OnboardingViewController: UIViewController {
     // MARK: - Constants
     private enum Constants {
         static let backgroundImage = "bg"
+        static let continueButtonText = "Continue"
         
         static let firstCellImage = "Illustration1"
         static let firstCellLabelText = "Your Personal \n Assistant"
@@ -55,7 +56,7 @@ final class OnboardingViewController: UIViewController {
     
     private lazy var continueButton: UIButton = {
         var conf = UIButton.Configuration.filled()
-        conf.title = "Continue"
+        conf.title = Constants.continueButtonText
         conf.attributedTitle?.foregroundColor = UIColor(hexString: "#191F28")
         conf.attributedTitle?.font = .systemFont(ofSize: 17, weight: .semibold)
         conf.buttonSize = .large
@@ -132,12 +133,12 @@ final class OnboardingViewController: UIViewController {
             $0.top.equalTo(view.safeAreaLayoutGuide).inset(12)
         }
         
-        //        view.addSubview(clearView)
-        //        clearView.snp.makeConstraints {
-        //            $0.left.right.equalToSuperview()
-        //            $0.bottom.equalTo(continueButton.snp.top).offset(-28)
-        //            $0.top.equalTo(view.safeAreaLayoutGuide).inset(56)
-        //        }
+        view.addSubview(clearView)
+        clearView.snp.makeConstraints {
+            $0.left.right.equalToSuperview()
+            $0.bottom.equalTo(continueButton.snp.top).offset(-28)
+            $0.top.equalTo(view.safeAreaLayoutGuide).inset(56)
+        }
     }
     
     private func bindUI() {
@@ -154,10 +155,6 @@ final class OnboardingViewController: UIViewController {
         ]
         
         continueButton.addTarget(self, action: #selector(continueButtonTapped), for: .touchUpInside)
-        
-        //navigationController?.setupLeftBarButtonItem(title: "Restore Purchase", fontSize: 14, action: #selector(subscribeButtonTapped))
-        //navigationController?.setupRightBarButtonItem(systemName: "xmark", action: #selector(rightBarButtonTapped))
-        
     }
     
     private func createCollectionLayout() -> UICollectionViewLayout {
@@ -193,39 +190,18 @@ final class OnboardingViewController: UIViewController {
         ]
         
         let termsOfUseRange = (attributedString.string as NSString).range(of: "Terms of Use")
-        attributedString.addAttribute(.link, value: "termsOfUse://", range: termsOfUseRange)
+        attributedString.addAttribute(.link, value: "https://www.google.com.ua/", range: termsOfUseRange)
         
         let privacyPolicyRange = (attributedString.string as NSString).range(of: "Privacy Policy")
-        attributedString.addAttribute(.link, value: "privacyPolicy://", range: privacyPolicyRange)
+        attributedString.addAttribute(.link, value: "https://github.com/", range: privacyPolicyRange)
         
         let subscriptionTermsRange = (attributedString.string as NSString).range(of: "Subscription Terms")
-        attributedString.addAttribute(.link, value: "subscriptionTerms://", range: subscriptionTermsRange)
+        attributedString.addAttribute(.link, value: "https://www.ukr.net/", range: subscriptionTermsRange)
         
         termsTextView.attributedText = attributedString
         termsTextView.linkTextAttributes = linkAttributes
         termsTextView.backgroundColor = .clear
         termsTextView.textContainerInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
-    }
-    
-    
-    @objc private func continueButtonTapped() {
-        let visibleRect = CGRect(origin: collectionView.contentOffset, size: collectionView.bounds.size)
-        let visiblePoint = CGPoint(x: visibleRect.midX, y: visibleRect.midY)
-        guard let visibleIndexPath = collectionView.indexPathForItem(at: visiblePoint) else { return }
-        
-        let nextItem = visibleIndexPath.item + 1
-        if nextItem < cells.count {
-            let nextIndexPath = IndexPath(item: nextItem, section: visibleIndexPath.section)
-            collectionView.scrollToItem(at: nextIndexPath, at: .right, animated: true)
-            
-            if nextItem == cells.count - 1 {
-                updateContinueButtonText(to: "Try Free & Subscribe")
-                setupNavigationItems()
-            }
-            updateVisibilityFor(index: nextItem)
-        } else {
-            
-        }
     }
     
     private func updateContinueButtonText(to newText: String) {
@@ -250,15 +226,28 @@ final class OnboardingViewController: UIViewController {
         navigationController?.setupRightBarButtonItem(systemName: "xmark", action: #selector(rightBarButtonTapped))
     }
     
-    @objc func subscribeButtonTapped() {
-        let paymentProcessor = PaymentProcessor()
-        paymentProcessor.processPayment(for: "SubscriptionProduct") { success in
-            if success {
-                print("Подписка оформлена успешно")
-            } else {
-                print("Ошибка оформления подписки")
+    @objc private func continueButtonTapped() {
+        let visibleRect = CGRect(origin: collectionView.contentOffset, size: collectionView.bounds.size)
+        let visiblePoint = CGPoint(x: visibleRect.midX, y: visibleRect.midY)
+        guard let visibleIndexPath = collectionView.indexPathForItem(at: visiblePoint) else { return }
+        
+        let nextItem = visibleIndexPath.item + 1
+        if nextItem < cells.count {
+            let nextIndexPath = IndexPath(item: nextItem, section: visibleIndexPath.section)
+            collectionView.scrollToItem(at: nextIndexPath, at: .right, animated: true)
+            
+            if nextItem == cells.count - 1 {
+                updateContinueButtonText(to: "Try Free & Subscribe")
+                setupNavigationItems()
             }
+            updateVisibilityFor(index: nextItem)
+        } else {
+            
         }
+    }
+    
+    @objc func subscribeButtonTapped() {
+        print("Tapped")
     }
     
     @objc func rightBarButtonTapped() {
@@ -286,15 +275,12 @@ extension OnboardingViewController: UICollectionViewDelegate, UICollectionViewDa
 // MARK: - TextView Delegate
 extension OnboardingViewController: UITextViewDelegate {
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-        switch URL.scheme {
-        case "termsOfUse":
-            print("Terms of Use tapped")
-        case "privacyPolicy":
-            print("Privacy Policy tapped")
-        case "subscriptionTerms":
-            print("Subscription Terms tapped")
-        default:
-            break
+        if URL.absoluteString == "https://www.google.com.ua/" {
+            UIApplication.shared.open(URL, options: [:], completionHandler: nil)
+        } else if URL.absoluteString == "https://github.com/" {
+            UIApplication.shared.open(URL, options: [:], completionHandler: nil)
+        } else if URL.absoluteString == "https://www.ukr.net/" {
+            UIApplication.shared.open(URL, options: [:], completionHandler: nil)
         }
         return false
     }

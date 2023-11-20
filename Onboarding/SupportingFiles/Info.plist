@@ -4,7 +4,7 @@
 <dict>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-		<string>termsOfUse</string>
+		<string>https://www.google.com.ua/</string>
 		<string>privacyPolicy</string>
 		<string>subscriptionTerms</string>
 	</array>

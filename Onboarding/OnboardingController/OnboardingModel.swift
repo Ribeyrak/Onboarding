@@ -7,7 +7,7 @@
 
 import UIKit
 
-enum ScreensType {
+enum ScreensType: Equatable, Hashable {
     case firstScreen
     case secondScreen
     case thirdScreen

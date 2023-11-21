@@ -14,15 +14,32 @@ final class OnboardingVC: UIViewController {
     private enum Constants {
         static let backgroundImage = #imageLiteral(resourceName: "bg")
         static let continueButtonText = "Continue"
+        static let updateContinueButtonText = "Try Free & Subscribe"
+        static let navBarLeftItemName = "Restore Purchase"
+        static let navBarRightItemImage = "xmark"
+        static let amount = 19.99
+        static let textViewString = "By continuing you accept our: \n Terms of Use, Privacy Policy and Subscription Terms"
+        
+        static let textViewInsetConstraint = CGFloat(10)
+        static let termsOfUse = "Terms of Use"
+        static let termsOfUseValue = "https://www.google.com.ua/"
+        
+        static let privacyPolicy = "Privacy Policy"
+        static let privacyPolicyValue = "https://github.com/"
+        
+        static let subscriptionTerms = "Subscription Terms"
+        static let subscriptionTermsValue = "https://www.ukr.net/"
     }
     
     // MARK: - Properties
-    var viewModel = OnboardingVM(amount: 19.99)
+    var viewModel = OnboardingVM(amount: Constants.amount)
     private var loadingIndicator: UIActivityIndicatorView?
     
-    // MARK: - Combine Properties
-    private var activityIndicator = CombineActivityIndicator()
-    
+    private typealias Snapshot = NSDiffableDataSourceSnapshot<Int, ScreensType>
+    private typealias DataSource = UICollectionViewDiffableDataSource<Int, ScreensType>
+    private lazy var snapshot = Snapshot()
+    private lazy var dataSource = makeDataSource()
+        
     // MARK: - UI
     private lazy var background: UIImageView = {
         let imageView = UIImageView()
@@ -85,8 +102,11 @@ final class OnboardingVC: UIViewController {
         setupUI()
         bindUI()
         setupTermsTextView()
+        
+        dataSource = makeDataSource()
+        applySnapshot(for: viewModel.cells)
     }
-    
+        
     // MARK: - Private functions
     private func setupUI() {
         view.addSubview(background)
@@ -131,11 +151,29 @@ final class OnboardingVC: UIViewController {
     }
     
     private func bindUI() {
-        collectionView.delegate = self
-        collectionView.dataSource = self
         collectionView.isScrollEnabled = true
-        
-        continueButton.addTarget(self, action: #selector(continueButtonTapped), for: .touchUpInside)
+        continueButton.addAction(UIAction(handler: { [weak self] _ in
+            self?.continueButtonTapped()
+        }), for: .touchUpInside)
+    }
+
+    private func makeDataSource() -> DataSource {
+        let cellRegistration = UICollectionView.CellRegistration<OnboardingViewCell, ScreensType> { cell, indexPath, screen in
+            cell.configure(cell: self.viewModel.configureCell(at: indexPath.row))
+        }
+
+        let dataSource = DataSource(collectionView: collectionView) { collectionView, indexPath, itemIdentifier in
+            return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: itemIdentifier)
+        }
+
+        return dataSource
+    }
+    
+    private func applySnapshot(for rows: [ScreensType]) {
+        var snapshot = Snapshot()
+        snapshot.appendSections([0])
+        snapshot.appendItems(rows)
+        dataSource.apply(snapshot)
     }
     
     // Setup CollectionViewLayout
@@ -143,12 +181,12 @@ final class OnboardingVC: UIViewController {
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1),
                                               heightDimension: .fractionalHeight(1))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 3, bottom: 0, trailing: 3)
+        item.contentInsets = NSDirectionalEdgeInsets(top: .zero, leading: 3, bottom: .zero, trailing: 3)
         
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.9),
                                                heightDimension: .fractionalHeight(1))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-        group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 3)
+        group.contentInsets = NSDirectionalEdgeInsets(top: .zero, leading: 6, bottom: .zero, trailing: 3)
         
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .groupPagingCentered
@@ -159,32 +197,32 @@ final class OnboardingVC: UIViewController {
     
     // Setup TextView
     private func setupTermsTextView() {
-        let attributedString = NSMutableAttributedString(string: "By continuing you accept our: \n Terms of Use, Privacy Policy and Subscription Terms")
+        let attributedString = NSMutableAttributedString(string: Constants.textViewString)
         
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         
-        attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: attributedString.length))
-        attributedString.addAttribute(.font, value: UIFont.systemFont(ofSize: 12), range: NSRange(location: 0, length: attributedString.length))
-        attributedString.addAttribute(.foregroundColor, value: UIColor(hexString: "#6E6E73"), range: NSRange(location: 0, length: attributedString.length))
+        attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: .zero, length: attributedString.length))
+        attributedString.addAttribute(.font, value: UIFont.systemFont(ofSize: 12), range: NSRange(location: .zero, length: attributedString.length))
+        attributedString.addAttribute(.foregroundColor, value: UIColor(hexString: "#6E6E73"), range: NSRange(location: .zero, length: attributedString.length))
         
         let linkAttributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: UIColor(hexString: "#208BFF")
         ]
         
-        let termsOfUseRange = (attributedString.string as NSString).range(of: "Terms of Use")
-        attributedString.addAttribute(.link, value: "https://www.google.com.ua/", range: termsOfUseRange)
+        let termsOfUseRange = (attributedString.string as NSString).range(of: Constants.termsOfUse)
+        attributedString.addAttribute(.link, value: Constants.termsOfUseValue, range: termsOfUseRange)
         
-        let privacyPolicyRange = (attributedString.string as NSString).range(of: "Privacy Policy")
-        attributedString.addAttribute(.link, value: "https://github.com/", range: privacyPolicyRange)
+        let privacyPolicyRange = (attributedString.string as NSString).range(of: Constants.privacyPolicy)
+        attributedString.addAttribute(.link, value: Constants.privacyPolicyValue, range: privacyPolicyRange)
         
-        let subscriptionTermsRange = (attributedString.string as NSString).range(of: "Subscription Terms")
-        attributedString.addAttribute(.link, value: "https://www.ukr.net/", range: subscriptionTermsRange)
+        let subscriptionTermsRange = (attributedString.string as NSString).range(of: Constants.subscriptionTerms)
+        attributedString.addAttribute(.link, value: Constants.subscriptionTermsValue, range: subscriptionTermsRange)
         
         termsTextView.attributedText = attributedString
         termsTextView.linkTextAttributes = linkAttributes
         termsTextView.backgroundColor = .clear
-        termsTextView.textContainerInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
+        termsTextView.textContainerInset = UIEdgeInsets(top: Constants.textViewInsetConstraint, left: Constants.textViewInsetConstraint, bottom: Constants.textViewInsetConstraint, right: Constants.textViewInsetConstraint)
     }
     
     private func updateContinueButtonText(to newText: String) {
@@ -211,11 +249,11 @@ final class OnboardingVC: UIViewController {
     }
     
     private func setupNavigationItems() {
-        navigationController?.setupLeftBarButtonItem(title: "Restore Purchase", fontSize: 14, action: #selector(subscribeButtonTapped))
-        navigationController?.setupRightBarButtonItem(systemName: "xmark", action: #selector(rightBarButtonTapped))
+        navigationController?.setupLeftBarButtonItem(title: Constants.navBarLeftItemName, fontSize: 14, action: #selector(subscribeButtonTapped))
+        navigationController?.setupRightBarButtonItem(systemName: Constants.navBarRightItemImage, action: #selector(rightBarButtonTapped))
     }
     
-    @objc private func continueButtonTapped() {
+    private func continueButtonTapped() {
         let visibleRect = CGRect(origin: collectionView.contentOffset, size: collectionView.bounds.size)
         let visiblePoint = CGPoint(x: visibleRect.midX, y: visibleRect.midY)
         guard let visibleIndexPath = collectionView.indexPathForItem(at: visiblePoint) else { return }
@@ -226,7 +264,7 @@ final class OnboardingVC: UIViewController {
             collectionView.scrollToItem(at: nextIndexPath, at: .right, animated: true)
             
             if nextItem == viewModel.numberOfCells() - 1 {
-                updateContinueButtonText(to: "Try Free & Subscribe")
+                updateContinueButtonText(to: Constants.updateContinueButtonText)
                 setupNavigationItems()
             }
             updateVisibilityFor(index: nextItem)
@@ -253,7 +291,7 @@ final class OnboardingVC: UIViewController {
         if loadingIndicator == nil {
             let indicator = UIActivityIndicatorView(style: .large)
             indicator.center = self.view.center
-            indicator.color = .white
+            indicator.color = .black
             self.view.addSubview(indicator)
             self.loadingIndicator = indicator
         }
@@ -267,7 +305,6 @@ final class OnboardingVC: UIViewController {
     
     private func processPurchase() {
         showLoadingIndicator()
-        
         viewModel.processPayment(for: "SubscriptionProduct") { [weak self] success in
             self?.hideLoadingIndicator()
             if success {
@@ -276,20 +313,6 @@ final class OnboardingVC: UIViewController {
                 self?.showPaymentError()
             }
         }
-    }
-    
-    private func handleSuccessfulPayment() {
-        let alert = UIAlertController(title: "Success", message: "Subscription activated successfully!", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-            print("Good job")
-        }))
-        present(alert, animated: true, completion: nil)
-    }
-    
-    private func showPaymentError() {
-        let alert = UIAlertController(title: "Payment Error", message: "There was an error processing your payment. Please try again.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-        present(alert, animated: true, completion: nil)
     }
     
     private func createFlatIndicatorImage(isCurrentPage: Bool) -> UIImage? {
@@ -304,27 +327,27 @@ final class OnboardingVC: UIViewController {
         }
     }}
 
-// MARK: - CollectionView Delegate, DataSource
-extension OnboardingVC: UICollectionViewDelegate, UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        viewModel.numberOfCells()
+// MARK: - Alert
+extension OnboardingVC {
+    func handleSuccessfulPayment() {
+        let alert = UIAlertController(title: "Success", message: "Subscription activated successfully!", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
+            print("Good job")
+        }))
+        present(alert, animated: true, completion: nil)
     }
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: OnboardingViewCell.identifier, for: indexPath) as! OnboardingViewCell
-        cell.configure(cell: viewModel.configureCell(at: indexPath.row))
-        return cell
+    func showPaymentError() {
+        let alert = UIAlertController(title: "Payment Error", message: "There was an error processing your payment. Please try again.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alert, animated: true, completion: nil)
     }
 }
 
 // MARK: - TextView Delegate
 extension OnboardingVC: UITextViewDelegate {
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-        if URL.absoluteString == "https://www.google.com.ua/" {
-            UIApplication.shared.open(URL, options: [:], completionHandler: nil)
-        } else if URL.absoluteString == "https://github.com/" {
-            UIApplication.shared.open(URL, options: [:], completionHandler: nil)
-        } else if URL.absoluteString == "https://www.ukr.net/" {
+        if URL.absoluteString == Constants.termsOfUseValue || URL.absoluteString == Constants.privacyPolicyValue || URL.absoluteString == Constants.subscriptionTermsValue {
             UIApplication.shared.open(URL, options: [:], completionHandler: nil)
         }
         return false

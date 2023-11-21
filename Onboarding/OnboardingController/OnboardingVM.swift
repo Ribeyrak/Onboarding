@@ -9,7 +9,7 @@ import UIKit
 
 final class OnboardingVM {
     // MARK: - Private properties
-    private var cells: [ScreensType]
+    var cells: [ScreensType]
 
     // MARK: - Init
     init(amount: Double) {

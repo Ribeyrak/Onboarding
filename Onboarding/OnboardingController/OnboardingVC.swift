@@ -7,11 +7,12 @@
 
 import UIKit
 import SnapKit
+import Combine
 
 final class OnboardingViewController: UIViewController {
     // MARK: - Constants
     private enum Constants {
-        static let backgroundImage = "bg"
+        static let backgroundImage = UIImage(named: "bg")
         static let continueButtonText = "Continue"
         
         static let firstCellImage = "Illustration1"
@@ -31,14 +32,18 @@ final class OnboardingViewController: UIViewController {
         static let fourthCellSublabelText = "7-Day Free Trial, \n then $19.99 /month, auto-renewable"
     }
     
-    var cells: [CellModel] = []
+    // MARK: - Properties
+    private var cells: [CellModel] = []
     private var loadingIndicator: UIActivityIndicatorView?
+    
+    // MARK: - Combine Properties
+    private var activityIndicator = CombineActivityIndicator()
     
     // MARK: - UI
     private lazy var background: UIImageView = {
-        let v = UIImageView()
-        v.image = UIImage(named: Constants.backgroundImage)
-        return v
+        let imageView = UIImageView()
+        imageView.image = Constants.backgroundImage
+        return imageView
     }()
     
     private lazy var collectionView: UICollectionView = {
@@ -50,9 +55,9 @@ final class OnboardingViewController: UIViewController {
     }()
     
     private lazy var clearView: UIView = {
-        let v = UIView()
-        v.backgroundColor = .clear
-        return v
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
     }()
     
     private lazy var continueButton: UIButton = {
@@ -70,13 +75,13 @@ final class OnboardingViewController: UIViewController {
     }()
     
     private lazy var termsTextView: UITextView = {
-        let v = UITextView()
-        v.translatesAutoresizingMaskIntoConstraints = false
-        v.isEditable = false
-        v.isScrollEnabled = false
-        v.delegate = self
-        v.isHidden = false
-        return v
+        let textView = UITextView()
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.isEditable = false
+        textView.isScrollEnabled = false
+        textView.delegate = self
+        textView.isHidden = false
+        return textView
     }()
     
     private lazy var pageControl: UIPageControl = {
@@ -90,6 +95,7 @@ final class OnboardingViewController: UIViewController {
         return pageControl
     }()
     
+    private let progressHood = ActivityIndicatorVC()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -142,11 +148,19 @@ final class OnboardingViewController: UIViewController {
         }
     }
     
+    /**
+     Пример использования комбайна
+     */
+    private func combineBindUI() {
+        activityIndicator.loading
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.isAnimating, on: progressHood)
+    }
+    
     private func bindUI() {
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.isScrollEnabled = true
-        //collectionView.showsHorizontalScrollIndicator = false
         
         cells = [
             CellModel(image: Constants.firstCellImage, mainLabelText: Constants.firstCellLabelText, subLabelText: Constants.firstCellSublabelText),
@@ -327,7 +341,7 @@ final class OnboardingViewController: UIViewController {
     }}
 
 // MARK: - CollectionView Delegate, DataSource
-extension OnboardingViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+extension OnboardingViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         cells.count
     }
@@ -354,15 +368,4 @@ extension OnboardingViewController: UITextViewDelegate {
     }
 }
 
-extension OnboardingViewController: UIScrollViewDelegate {
-    //    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-    //        let cellWidthIncludingSpacing = scrollView.frame.width * 0.9 + 6
-    //        let index = Int((scrollView.contentOffset.x + cellWidthIncludingSpacing / 2) / cellWidthIncludingSpacing)
-    //
-    //        pageControl.currentPage = index
-    //
-    //        termsTextView.isHidden = index == 1 || index == 2
-    //        pageControl.isHidden = index == 0 || index == 3
-    //    }
-}
 

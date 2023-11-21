@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  OnboardingVC.swift
 //  Onboarding
 //
 //  Created by Evhen Lukhtan on 20.11.2023.
@@ -9,31 +9,15 @@ import UIKit
 import SnapKit
 import Combine
 
-final class OnboardingViewController: UIViewController {
+final class OnboardingVC: UIViewController {
     // MARK: - Constants
     private enum Constants {
-        static let backgroundImage = UIImage(named: "bg")
+        static let backgroundImage = #imageLiteral(resourceName: "bg")
         static let continueButtonText = "Continue"
-        
-        static let firstCellImage = "Illustration1"
-        static let firstCellLabelText = "Your Personal \n Assistant"
-        static let firstCellSublabelText = "Simplify your life \n with an AI companion"
-        
-        static let secondCellImage = "Illustration2"
-        static let secondCellLabelText = "Get assistance \n with any topic"
-        static let secondCellSublabelText = "From daily tasks to complex \n queries, we’ve got you covered"
-        
-        static let thirdCellImage = "Illustration3"
-        static let thirdCellLabelText = "Perfect copy \n you can rely on"
-        static let thirdCellSublabelText = "Generate professional \n texts effortlessly"
-        
-        static let fourthCellImage = "Illustration4"
-        static let fourthCellLabelText = "Upgrade for Unlimited \n AI Capabilities"
-        static let fourthCellSublabelText = "7-Day Free Trial, \n then $19.99 /month, auto-renewable"
     }
     
     // MARK: - Properties
-    private var cells: [CellModel] = []
+    var viewModel = OnboardingVM(amount: 19.99)
     private var loadingIndicator: UIActivityIndicatorView?
     
     // MARK: - Combine Properties
@@ -69,9 +53,9 @@ final class OnboardingViewController: UIViewController {
         conf.baseBackgroundColor = UIColor(hexString: "#FFFFFF")
         conf.cornerStyle = .capsule
         
-        let v = UIButton(configuration: conf)
-        v.translatesAutoresizingMaskIntoConstraints = false
-        return v
+        let button = UIButton(configuration: conf)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }()
     
     private lazy var termsTextView: UITextView = {
@@ -94,9 +78,7 @@ final class OnboardingViewController: UIViewController {
         pageControl.isHidden = true
         return pageControl
     }()
-    
-    private let progressHood = ActivityIndicatorVC()
-    
+        
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -148,26 +130,10 @@ final class OnboardingViewController: UIViewController {
         }
     }
     
-    /**
-     Пример использования комбайна
-     */
-    private func combineBindUI() {
-        activityIndicator.loading
-            .receive(on: DispatchQueue.main)
-            .assign(to: \.isAnimating, on: progressHood)
-    }
-    
     private func bindUI() {
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.isScrollEnabled = true
-        
-        cells = [
-            CellModel(image: Constants.firstCellImage, mainLabelText: Constants.firstCellLabelText, subLabelText: Constants.firstCellSublabelText),
-            CellModel(image: Constants.secondCellImage, mainLabelText: Constants.secondCellLabelText, subLabelText: Constants.secondCellSublabelText),
-            CellModel(image: Constants.thirdCellImage, mainLabelText: Constants.thirdCellLabelText, subLabelText: Constants.thirdCellSublabelText),
-            CellModel(image: Constants.fourthCellImage, mainLabelText: Constants.fourthCellLabelText, subLabelText: Constants.fourthCellSublabelText)
-        ]
         
         continueButton.addTarget(self, action: #selector(continueButtonTapped), for: .touchUpInside)
     }
@@ -255,23 +221,22 @@ final class OnboardingViewController: UIViewController {
         guard let visibleIndexPath = collectionView.indexPathForItem(at: visiblePoint) else { return }
         
         let nextItem = visibleIndexPath.item + 1
-        if nextItem < cells.count {
+        if nextItem < viewModel.numberOfCells() {
             let nextIndexPath = IndexPath(item: nextItem, section: visibleIndexPath.section)
             collectionView.scrollToItem(at: nextIndexPath, at: .right, animated: true)
             
-            if nextItem == cells.count - 1 {
+            if nextItem == viewModel.numberOfCells() - 1 {
                 updateContinueButtonText(to: "Try Free & Subscribe")
                 setupNavigationItems()
             }
             updateVisibilityFor(index: nextItem)
-        } else if nextItem == cells.count {
+        } else if nextItem == viewModel.numberOfCells() {
             processPurchase()
         }
     }
     
     @objc func subscribeButtonTapped() {
-        let paymentProcessor = PaymentProcessor()
-        paymentProcessor.processPayment(for: "someProduct") { success in
+        viewModel.processPayment(for: "someProduct") { success in
             if success {
                 print("Subs restore success")
             } else {
@@ -303,8 +268,7 @@ final class OnboardingViewController: UIViewController {
     private func processPurchase() {
         showLoadingIndicator()
         
-        let paymentProcessor = PaymentProcessor()
-        paymentProcessor.processPayment(for: "SubscriptionProduct") { [weak self] success in
+        viewModel.processPayment(for: "SubscriptionProduct") { [weak self] success in
             self?.hideLoadingIndicator()
             if success {
                 self?.handleSuccessfulPayment()
@@ -341,21 +305,20 @@ final class OnboardingViewController: UIViewController {
     }}
 
 // MARK: - CollectionView Delegate, DataSource
-extension OnboardingViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+extension OnboardingVC: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        cells.count
+        viewModel.numberOfCells()
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: OnboardingViewCell.identifier, for: indexPath) as! OnboardingViewCell
-        let res = cells[indexPath.row]
-        cell.configure(cell: res)
+        cell.configure(cell: viewModel.configureCell(at: indexPath.row))
         return cell
     }
 }
 
 // MARK: - TextView Delegate
-extension OnboardingViewController: UITextViewDelegate {
+extension OnboardingVC: UITextViewDelegate {
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
         if URL.absoluteString == "https://www.google.com.ua/" {
             UIApplication.shared.open(URL, options: [:], completionHandler: nil)

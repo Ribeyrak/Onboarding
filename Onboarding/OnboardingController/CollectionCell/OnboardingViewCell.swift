@@ -16,28 +16,37 @@ class OnboardingViewCell: UICollectionViewCell {
     
     // MARK: - UI
     private lazy var image: UIImageView = {
-        let v = UIImageView()
-        v.contentMode = .scaleAspectFill
-        return v
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        return imageView
     }()
     
     private lazy var mainLabel: UILabel = {
-        let v = UILabel()
-        v.textAlignment = .center
-        v.numberOfLines = 2
-        v.font = .systemFont(ofSize: 26, weight: .semibold)
-        v.textColor = UIColor(hexString: "#FFFFFF")
-        v.translatesAutoresizingMaskIntoConstraints = false
-        return v
+        let label = UILabel()
+        label.textAlignment = .center
+        label.numberOfLines = 2
+        label.font = .systemFont(ofSize: 26, weight: .semibold)
+        label.textColor = UIColor(hexString: "#FFFFFF")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     private lazy var subLabel: UILabel = {
-        let v = UILabel()
-        v.textAlignment = .center
-        v.numberOfLines = 2
-        v.font = .systemFont(ofSize: 16, weight: .regular)
-        v.textColor = UIColor(hexString: "#E3E3E3")
-        return v
+        let label = UILabel()
+        label.textAlignment = .center
+        label.numberOfLines = 2
+        label.font = .systemFont(ofSize: 16, weight: .regular)
+        label.textColor = UIColor(hexString: "#E3E3E3")
+        return label
+    }()
+    
+    private lazy var amountLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .center
+        label.numberOfLines = 2
+        label.font = .systemFont(ofSize: 16, weight: .bold)
+        label.textColor = UIColor(hexString: "#E3E3E3")
+        return label
     }()
     
     // MARK: - Initialization
@@ -73,10 +82,16 @@ class OnboardingViewCell: UICollectionViewCell {
         }
     }
     
-    func configure(cell: CellModel) {
-        image.image = UIImage(named: cell.image)
-        mainLabel.text = cell.mainLabelText
-        subLabel.text = cell.subLabelText
+    func configure(cell: ScreensType) {
+        image.image = cell.image
+        mainLabel.text = cell.label
+        if let subLabelText = cell.sublabel {
+            subLabel.text = subLabelText
+        }
+        
+        if let attributedSublabelText = cell.atributedSublabel {
+            subLabel.attributedText = attributedSublabelText
+        }
         
         layer.cornerRadius = 20
         layer.masksToBounds = true

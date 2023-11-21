@@ -9,6 +9,9 @@ import UIKit
 import SnapKit
 import Combine
 
+private typealias Snapshot = NSDiffableDataSourceSnapshot<Int, ScreensType>
+private typealias DataSource = UICollectionViewDiffableDataSource<Int, ScreensType>
+
 final class OnboardingVC: UIViewController {
     // MARK: - Constants
     private enum Constants {
@@ -32,14 +35,14 @@ final class OnboardingVC: UIViewController {
     }
     
     // MARK: - Properties
-    var viewModel = OnboardingVM(amount: Constants.amount)
+    private let viewModel = OnboardingVM()
+    private var cancellables = Set<AnyCancellable>()
+    
     private var loadingIndicator: UIActivityIndicatorView?
     
-    private typealias Snapshot = NSDiffableDataSourceSnapshot<Int, ScreensType>
-    private typealias DataSource = UICollectionViewDiffableDataSource<Int, ScreensType>
     private lazy var snapshot = Snapshot()
     private lazy var dataSource = makeDataSource()
-        
+    
     // MARK: - UI
     private lazy var background: UIImageView = {
         let imageView = UIImageView()
@@ -50,8 +53,8 @@ final class OnboardingVC: UIViewController {
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero,
                                               collectionViewLayout: createCollectionLayout())
-        collectionView.register(OnboardingViewCell.self, forCellWithReuseIdentifier: OnboardingViewCell.identifier)
         collectionView.backgroundColor = .clear
+        collectionView.isScrollEnabled = true
         return collectionView
     }()
     
@@ -95,7 +98,7 @@ final class OnboardingVC: UIViewController {
         pageControl.isHidden = true
         return pageControl
     }()
-        
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -103,10 +106,10 @@ final class OnboardingVC: UIViewController {
         bindUI()
         setupTermsTextView()
         
-        dataSource = makeDataSource()
-        applySnapshot(for: viewModel.cells)
+        bindCombine()
+        viewModel.amountSubject.send(Constants.amount)
     }
-        
+    
     // MARK: - Private functions
     private func setupUI() {
         view.addSubview(background)
@@ -151,31 +154,37 @@ final class OnboardingVC: UIViewController {
     }
     
     private func bindUI() {
-        collectionView.isScrollEnabled = true
         continueButton.addAction(UIAction(handler: { [weak self] _ in
             self?.continueButtonTapped()
         }), for: .touchUpInside)
     }
-
+    
+    private func bindCombine() {
+        viewModel.$screens
+            .sink { [weak self] in
+                self?.applySnapshot(for: $0)
+            }
+            .store(in: &cancellables)
+    }
+    
     private func makeDataSource() -> DataSource {
         let cellRegistration = UICollectionView.CellRegistration<OnboardingViewCell, ScreensType> { cell, indexPath, screen in
             cell.configure(cell: self.viewModel.configureCell(at: indexPath.row))
         }
-
+        
         let dataSource = DataSource(collectionView: collectionView) { collectionView, indexPath, itemIdentifier in
             return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: itemIdentifier)
         }
-
+        
         return dataSource
     }
     
     private func applySnapshot(for rows: [ScreensType]) {
-        var snapshot = Snapshot()
+        var snapshot = snapshot
         snapshot.appendSections([0])
         snapshot.appendItems(rows)
         dataSource.apply(snapshot)
     }
-    
     // Setup CollectionViewLayout
     private func createCollectionLayout() -> UICollectionViewLayout {
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1),
@@ -325,7 +334,8 @@ final class OnboardingVC: UIViewController {
             ctx.cgContext.addPath(path.cgPath)
             ctx.cgContext.fillPath()
         }
-    }}
+    }
+}
 
 // MARK: - Alert
 extension OnboardingVC {

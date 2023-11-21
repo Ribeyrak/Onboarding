@@ -8,10 +8,6 @@
 import UIKit
 import SnapKit
 
-protocol ReusableViewCell: AnyObject {
-    static var identifier: String { get }
-}
-
 class OnboardingViewCell: UICollectionViewCell {
     
     // MARK: - UI
@@ -95,12 +91,5 @@ class OnboardingViewCell: UICollectionViewCell {
         
         layer.cornerRadius = 20
         layer.masksToBounds = true
-    }
-}
-
-// MARK: - extensions
-extension OnboardingViewCell: ReusableViewCell {
-    static var identifier: String {
-        return String(describing: self)
     }
 }

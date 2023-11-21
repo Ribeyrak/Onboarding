@@ -6,22 +6,25 @@
 //
 
 import UIKit
+import Combine
 
 final class OnboardingVM {
     // MARK: - Private properties
-    var cells: [ScreensType]
-
+    @Published private(set) var screens: [ScreensType] = []
+    private(set) var amountSubject = PassthroughSubject<Double, Never>()
+    private var cancellables = Set<AnyCancellable>()
+    
     // MARK: - Init
-    init(amount: Double) {
-        self.cells = [.firstScreen, .secondScreen, .thirdScreen, .fourthScreen(amount)]
+    init() {
+        bind()
     }
-    // MARK: - Methods
+    // MARK: - Public Methods
     func numberOfCells() -> Int {
-            return cells.count
+            return screens.count
         }
     
     func configureCell(at index: Int) -> ScreensType {
-        cells[index]
+        screens[index]
     }
 
     func processPayment(for product: String, completion: @escaping (Bool) -> Void) {
@@ -29,5 +32,15 @@ final class OnboardingVM {
             let success = Bool.random()
             completion(success)
         }
+    }
+    
+    // MARK: - Private Methods
+    private func bind() {
+        amountSubject
+            .map { amount -> [ScreensType] in
+                [.firstScreen, .secondScreen, .thirdScreen, .fourthScreen(amount)]
+            }
+            .assign(to: \.screens, on: self)
+            .store(in: &cancellables)
     }
 }

@@ -32,6 +32,7 @@ final class OnboardingViewController: UIViewController {
     }
     
     var cells: [CellModel] = []
+    private var loadingIndicator: UIActivityIndicatorView?
     
     // MARK: - UI
     private lazy var background: UIImageView = {
@@ -82,8 +83,8 @@ final class OnboardingViewController: UIViewController {
         let pageControl = UIPageControl()
         pageControl.numberOfPages = 4
         pageControl.currentPage = 0
-        pageControl.pageIndicatorTintColor = .gray
-        pageControl.currentPageIndicatorTintColor = .white
+        pageControl.pageIndicatorTintColor = UIColor(hexString: "#9099A6")
+        pageControl.currentPageIndicatorTintColor = UIColor(hexString: "#009AFF")
         pageControl.translatesAutoresizingMaskIntoConstraints = false
         pageControl.isHidden = true
         return pageControl
@@ -157,6 +158,7 @@ final class OnboardingViewController: UIViewController {
         continueButton.addTarget(self, action: #selector(continueButtonTapped), for: .touchUpInside)
     }
     
+    // Setup CollectionViewLayout
     private func createCollectionLayout() -> UICollectionViewLayout {
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1),
                                               heightDimension: .fractionalHeight(1))
@@ -175,6 +177,7 @@ final class OnboardingViewController: UIViewController {
         return layout
     }
     
+    // Setup TextView
     private func setupTermsTextView() {
         let attributedString = NSMutableAttributedString(string: "By continuing you accept our: \n Terms of Use, Privacy Policy and Subscription Terms")
         
@@ -219,6 +222,12 @@ final class OnboardingViewController: UIViewController {
         termsTextView.isHidden = index == 1 || index == 2
         pageControl.isHidden = index == 0 || index == 3
         pageControl.currentPage = index
+        
+        for i in 0..<pageControl.numberOfPages {
+            let isCurrentPage = i == index
+            let indicatorImage = createFlatIndicatorImage(isCurrentPage: isCurrentPage)
+            pageControl.setIndicatorImage(indicatorImage, forPage: i)
+        }
     }
     
     private func setupNavigationItems() {
@@ -241,19 +250,81 @@ final class OnboardingViewController: UIViewController {
                 setupNavigationItems()
             }
             updateVisibilityFor(index: nextItem)
-        } else {
-            
+        } else if nextItem == cells.count {
+            processPurchase()
         }
     }
     
     @objc func subscribeButtonTapped() {
-        print("Tapped")
+        let paymentProcessor = PaymentProcessor()
+        paymentProcessor.processPayment(for: "someProduct") { success in
+            if success {
+                print("Subs restore success")
+            } else {
+                print("Restore fail")
+            }
+        }
     }
     
     @objc func rightBarButtonTapped() {
-        print("tappetNavssss")
+        print("rightBarButtonTapped")
     }
-}
+    
+    private func showLoadingIndicator() {
+        if loadingIndicator == nil {
+            let indicator = UIActivityIndicatorView(style: .large)
+            indicator.center = self.view.center
+            indicator.color = .white
+            self.view.addSubview(indicator)
+            self.loadingIndicator = indicator
+        }
+        
+        loadingIndicator?.startAnimating()
+    }
+    
+    private func hideLoadingIndicator() {
+        loadingIndicator?.stopAnimating()
+    }
+    
+    private func processPurchase() {
+        showLoadingIndicator()
+        
+        let paymentProcessor = PaymentProcessor()
+        paymentProcessor.processPayment(for: "SubscriptionProduct") { [weak self] success in
+            self?.hideLoadingIndicator()
+            if success {
+                self?.handleSuccessfulPayment()
+            } else {
+                self?.showPaymentError()
+            }
+        }
+    }
+    
+    private func handleSuccessfulPayment() {
+        let alert = UIAlertController(title: "Success", message: "Subscription activated successfully!", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
+            print("Good job")
+        }))
+        present(alert, animated: true, completion: nil)
+    }
+    
+    private func showPaymentError() {
+        let alert = UIAlertController(title: "Payment Error", message: "There was an error processing your payment. Please try again.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alert, animated: true, completion: nil)
+    }
+    
+    private func createFlatIndicatorImage(isCurrentPage: Bool) -> UIImage? {
+        let width = isCurrentPage ? 25 : 14
+        let size = CGSize(width: width, height: 4)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { ctx in
+            let rect = CGRect(origin: .zero, size: size)
+            let path = UIBezierPath(roundedRect: rect, cornerRadius: CGFloat(8))
+            ctx.cgContext.addPath(path.cgPath)
+            ctx.cgContext.fillPath()
+        }
+    }}
 
 // MARK: - CollectionView Delegate, DataSource
 extension OnboardingViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
@@ -264,9 +335,6 @@ extension OnboardingViewController: UICollectionViewDelegate, UICollectionViewDa
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: OnboardingViewCell.identifier, for: indexPath) as! OnboardingViewCell
         let res = cells[indexPath.row]
-        //        termsTextView.isHidden = !(indexPath.row == 0 || indexPath.row == 3)
-        //        pageControl.isHidden = !(indexPath.row == 1 || indexPath.row == 2)
-        //        pageControl.currentPage = indexPath.row
         cell.configure(cell: res)
         return cell
     }

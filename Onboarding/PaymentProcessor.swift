@@ -8,5 +8,10 @@
 import UIKit
 
 class PaymentProcessor {
-
+    func processPayment(for product: String, completion: @escaping (Bool) -> Void) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            let success = Bool.random()
+            completion(success)
+        }
+    }
 }

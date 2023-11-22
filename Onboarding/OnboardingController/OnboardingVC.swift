@@ -154,6 +154,7 @@ final class OnboardingVC: UIViewController {
     }
     
     private func bindUI() {
+        viewModel.delegate = self
         continueButton.addAction(UIAction(handler: { [weak self] _ in
             self?.continueButtonTapped()
         }), for: .touchUpInside)
@@ -258,7 +259,7 @@ final class OnboardingVC: UIViewController {
     }
     
     private func setupNavigationItems() {
-        navigationController?.setupLeftBarButtonItem(title: Constants.navBarLeftItemName, fontSize: 14, action: #selector(subscribeButtonTapped))
+        navigationController?.setupLeftBarButtonItem(title: Constants.navBarLeftItemName, fontSize: 14, action: #selector(restoreButtonTapped))
         navigationController?.setupRightBarButtonItem(systemName: Constants.navBarRightItemImage, action: #selector(rightBarButtonTapped))
     }
     
@@ -279,21 +280,27 @@ final class OnboardingVC: UIViewController {
             updateVisibilityFor(index: nextItem)
         } else if nextItem == viewModel.numberOfCells() {
             processPurchase()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                self.loadingIndicator?.stopAnimating()
+            }
         }
     }
     
-    @objc func subscribeButtonTapped() {
-        viewModel.processPayment(for: "someProduct") { success in
-            if success {
-                print("Subs restore success")
-            } else {
-                print("Restore fail")
-            }
+    @objc func restoreButtonTapped() {
+        showLoadingIndicator()
+        viewModel.processRestore()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.loadingIndicator?.stopAnimating()
         }
     }
     
     @objc func rightBarButtonTapped() {
         print("rightBarButtonTapped")
+    }
+    
+    private func processPurchase() {
+        showLoadingIndicator()
+        viewModel.processPayment(for: "SubscriptionProduct")
     }
     
     private func showLoadingIndicator() {
@@ -304,23 +311,12 @@ final class OnboardingVC: UIViewController {
             self.view.addSubview(indicator)
             self.loadingIndicator = indicator
         }
-        
         loadingIndicator?.startAnimating()
     }
     
     private func hideLoadingIndicator() {
-        loadingIndicator?.stopAnimating()
-    }
-    
-    private func processPurchase() {
-        showLoadingIndicator()
-        viewModel.processPayment(for: "SubscriptionProduct") { [weak self] success in
-            self?.hideLoadingIndicator()
-            if success {
-                self?.handleSuccessfulPayment()
-            } else {
-                self?.showPaymentError()
-            }
+        DispatchQueue.main.async {
+            self.loadingIndicator?.stopAnimating()
         }
     }
     
@@ -338,16 +334,15 @@ final class OnboardingVC: UIViewController {
 }
 
 // MARK: - Alert
-extension OnboardingVC {
-    func handleSuccessfulPayment() {
+extension OnboardingVC: OnboardingVMDelegate {
+    func onboardingVMDidCompletePurchase() {
         let alert = UIAlertController(title: "Success", message: "Subscription activated successfully!", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-            print("Good job")
         }))
         present(alert, animated: true, completion: nil)
     }
     
-    func showPaymentError() {
+    func onboardingVMDidFailPurchase() {
         let alert = UIAlertController(title: "Payment Error", message: "There was an error processing your payment. Please try again.", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
         present(alert, animated: true, completion: nil)

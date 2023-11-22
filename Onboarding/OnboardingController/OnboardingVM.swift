@@ -8,11 +8,17 @@
 import UIKit
 import Combine
 
+protocol OnboardingVMDelegate: AnyObject {
+    func onboardingVMDidCompletePurchase()
+    func onboardingVMDidFailPurchase()
+}
+
 final class OnboardingVM {
     // MARK: - Private properties
     @Published private(set) var screens: [ScreensType] = []
     private(set) var amountSubject = PassthroughSubject<Double, Never>()
-    private var cancellables = Set<AnyCancellable>()
+    var cancellables = Set<AnyCancellable>()
+    weak var delegate: OnboardingVMDelegate?
     
     // MARK: - Init
     init() {
@@ -20,18 +26,37 @@ final class OnboardingVM {
     }
     // MARK: - Public Methods
     func numberOfCells() -> Int {
-            return screens.count
-        }
+        return screens.count
+    }
     
     func configureCell(at index: Int) -> ScreensType {
         screens[index]
     }
-
-    func processPayment(for product: String, completion: @escaping (Bool) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            let success = Bool.random()
-            completion(success)
-        }
+    
+    func processPayment(for productIdentifier: String) {
+        IAPManager.shared.purchaseProduct(with: productIdentifier)
+        IAPManager.shared.purchasePublisher
+            .sink { [weak self] success in
+                if success {
+                    self?.handleSuccessfulPayment()
+                } else {
+                    self?.showPaymentError()
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    func processRestore() {
+        IAPManager.shared.restorePurchases()
+        IAPManager.shared.restorePublisher
+            .sink { [weak self] success in
+                if success {
+                    self?.handleSuccessfulPayment()
+                } else {
+                    self?.showPaymentError()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Private Methods
@@ -42,5 +67,13 @@ final class OnboardingVM {
             }
             .assign(to: \.screens, on: self)
             .store(in: &cancellables)
+    }
+    
+    private func handleSuccessfulPayment() {
+        delegate?.onboardingVMDidCompletePurchase()
+    }
+    
+    private func showPaymentError() {
+        delegate?.onboardingVMDidFailPurchase()
     }
 }

@@ -19,6 +19,7 @@
 		C8031F712B0CC5A700344BFE /* OnboardingVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8031F702B0CC5A700344BFE /* OnboardingVM.swift */; };
 		C8031F732B0CD50800344BFE /* Number.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8031F722B0CD50800344BFE /* Number.swift */; };
 		C8031F752B0CDDD100344BFE /* OnboardingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8031F742B0CDDD100344BFE /* OnboardingModel.swift */; };
+		C843A8FB2B0E1B9C0068EBDD /* IAPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C843A8FA2B0E1B9C0068EBDD /* IAPManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,7 @@
 		C8031F702B0CC5A700344BFE /* OnboardingVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingVM.swift; sourceTree = "<group>"; };
 		C8031F722B0CD50800344BFE /* Number.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Number.swift; sourceTree = "<group>"; };
 		C8031F742B0CDDD100344BFE /* OnboardingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingModel.swift; sourceTree = "<group>"; };
+		C843A8FA2B0E1B9C0068EBDD /* IAPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IAPManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +56,7 @@
 			children = (
 				C8031F382B0B5C8500344BFE /* Onboarding */,
 				C8031F372B0B5C8500344BFE /* Products */,
+				C843A8F12B0D29DB0068EBDD /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -70,6 +73,7 @@
 			children = (
 				C8031F4D2B0B5CF300344BFE /* Application */,
 				C8031F5F2B0CBB7D00344BFE /* OnboardingController */,
+				C843A8F92B0E1B3C0068EBDD /* Subscription */,
 				C8031F542B0B72B500344BFE /* Helpers */,
 				C8031F4E2B0B5D1A00344BFE /* SupportingFiles */,
 			);
@@ -130,6 +134,21 @@
 				C8031F722B0CD50800344BFE /* Number.swift */,
 			);
 			path = Extensions;
+			sourceTree = "<group>";
+		};
+		C843A8F12B0D29DB0068EBDD /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C843A8F92B0E1B3C0068EBDD /* Subscription */ = {
+			isa = PBXGroup;
+			children = (
+				C843A8FA2B0E1B9C0068EBDD /* IAPManager.swift */,
+			);
+			path = Subscription;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -214,6 +233,7 @@
 				C8031F3A2B0B5C8500344BFE /* AppDelegate.swift in Sources */,
 				C8031F3C2B0B5C8500344BFE /* SceneDelegate.swift in Sources */,
 				C8031F732B0CD50800344BFE /* Number.swift in Sources */,
+				C843A8FB2B0E1B9C0068EBDD /* IAPManager.swift in Sources */,
 				C8031F562B0B72C400344BFE /* UIColor.swift in Sources */,
 				C8031F5A2B0BCDA900344BFE /* UINavigationController.swift in Sources */,
 				C8031F752B0CDDD100344BFE /* OnboardingModel.swift in Sources */,

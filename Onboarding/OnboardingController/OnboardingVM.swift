@@ -36,12 +36,8 @@ final class OnboardingVM {
     func processPayment(for productIdentifier: String) {
         IAPManager.shared.purchaseProduct(with: productIdentifier)
         IAPManager.shared.purchasePublisher
-            .sink { [weak self] success in
-                if success {
-                    self?.handleSuccessfulPayment()
-                } else {
-                    self?.showPaymentError()
-                }
+            .sink { [weak self] in
+                $0 ? self?.handleSuccessfulPayment() : self?.showPaymentError()
             }
             .store(in: &cancellables)
     }
@@ -49,12 +45,8 @@ final class OnboardingVM {
     func processRestore() {
         IAPManager.shared.restorePurchases()
         IAPManager.shared.restorePublisher
-            .sink { [weak self] success in
-                if success {
-                    self?.handleSuccessfulPayment()
-                } else {
-                    self?.showPaymentError()
-                }
+            .sink { [weak self] in
+               $0 ? self?.handleSuccessfulPayment() : self?.showPaymentError()
             }
             .store(in: &cancellables)
     }

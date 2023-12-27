@@ -205,6 +205,10 @@ final class OnboardingVC: UIViewController {
         return layout
     }
     
+    func test () {
+        print("sdf")
+    }
+    
     // Setup TextView
     private func setupTermsTextView() {
         let attributedString = NSMutableAttributedString(string: Constants.textViewString)
